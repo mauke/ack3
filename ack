@@ -296,24 +296,6 @@ MAIN: {
 # End of MAIN
 
 
-sub _build_and_or {
-    my $opt_and = shift;
-    my $opt_or = shift;
-    my $opt = shift;
-
-    for my $and_regex ( @{$opt->{and}} ) {
-        my ($built, undef) = build_regex( $and_regex, $opt );
-        push( @{$$opt_and}, $built );
-    }
-    for my $or_regex ( @{$opt->{or}} ) {
-        my ($built, undef) = build_regex( $or_regex, $opt );
-        push( @{$$opt_or}, $built );
-    }
-    return;
-
-}
-
-
 sub file_loop_fg {
     my $files = shift;
 
@@ -873,8 +855,7 @@ sub print_matches_in_file {
         my $last_match_lineno;
         my $in_range = range_setup();
 
-        my $has_bool = $opt_and || $opt_or;
-
+        my $highlight_re = _build_highlight_re( $search_re, $opt_and, $opt_or );
         while ( <$fh> ) {
             chomp;
 
@@ -883,20 +864,21 @@ sub print_matches_in_file {
             if ( $in_range ) {
                 $match_colno = undef;
                 my $is_match = /$search_re/o;
-                if ( $has_bool ) {
+                if ( $is_match ) {
+                    $match_colno = $-[0] + 1;
                     if ( $opt_and ) {
                         for my $re ( @{$opt_and} ) {
                             $is_match &&= /$re/;
                         }
                     }
-                    elsif ( $opt_or ) {
+                    if ( $opt_or ) {
                         for my $re ( @{$opt_or} ) {
                             $is_match ||= /$re/;
                         }
                     }
+                    $match_colno = undef unless $is_match;
                 }
                 if ( $is_match ) {
-                    $match_colno = $-[0] + 1;
                     if ( !$has_printed_from_this_file ) {
                         $stats{filematches}++;
                         if ( $opt_break && $has_printed_from_any_file ) {
@@ -982,9 +964,10 @@ sub print_line_with_options {
     else {
         my $underline = '';
 
+        my $highlight_re = _build_highlight_re( $search_re, $opt_and, $opt_or );
         # We have to do underlining before any highlighting because highlighting modifies string length.
         if ( $opt_underline && !$skip_coloring ) {
-            while ( $line =~ /$search_re/og ) {
+            while ( $line =~ /$highlight_re/og ) {
                 my $match_start = $-[0] // next;
                 my $match_end = $+[0];
                 my $match_length = $match_end - $match_start;
@@ -999,7 +982,7 @@ sub print_line_with_options {
         if ( $opt_color && !$skip_coloring ) {
             my $highlighted = 0; # If highlighted, need to escape afterwards.
 
-            while ( $line =~ /$search_re/og ) {
+            while ( $line =~ /$highlight_re/og ) {
                 my $match_start = $-[0] // next;
                 my $match_end = $+[0];
                 my $match_length = $match_end - $match_start;
@@ -1154,6 +1137,40 @@ sub count_matches_in_file {
 
 sub range_setup {
     return !$using_ranges || (!$opt_range_start && $opt_range_end);
+}
+
+
+sub _build_and_or {
+    my $opt_and = shift;
+    my $opt_or = shift;
+    my $opt = shift;
+
+    for my $and_regex ( @{$opt->{and}} ) {
+        my ($built, undef) = build_regex( $and_regex, $opt );
+        push( @{$$opt_and}, $built );
+    }
+    for my $or_regex ( @{$opt->{or}} ) {
+        my ($built, undef) = build_regex( $or_regex, $opt );
+        push( @{$$opt_or}, $built );
+    }
+    return;
+
+}
+
+
+sub _build_highlight_re {
+    my $highlight_re;
+    if ( $opt_and ) {
+        $highlight_re = join( '|', $search_re, @{$opt_and} );
+    }
+    elsif ( $opt_or ) {
+        $highlight_re = join( '|', $search_re, @{$opt_or} );
+    }
+    else {
+        $highlight_re = $search_re;
+    }
+
+    return $highlight_re;
 }
 
 
