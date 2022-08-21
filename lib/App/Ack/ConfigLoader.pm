@@ -903,6 +903,9 @@ sub mutex_options {
             g => 1,
             l => 1,
         },
+        I => {
+            f => 1,
+        },
         L => {
             A => 1,
             B => 1,
@@ -970,6 +973,7 @@ sub mutex_options {
             B => 1,
             C => 1,
             H => 1,
+            I => 1,
             L => 1,
             break => 1,
             c => 1,
@@ -980,6 +984,7 @@ sub mutex_options {
             group => 1,
             h => 1,
             heading => 1,
+            i => 1,
             l => 1,
             m => 1,
             match => 1,
@@ -987,6 +992,7 @@ sub mutex_options {
             output => 1,
             p => 1,
             passthru => 1,
+            'smart-case' => 1,
             u => 1,
             v => 1,
             x => 1,
@@ -1040,6 +1046,9 @@ sub mutex_options {
             f => 1,
             g => 1,
             l => 1,
+        },
+        i => {
+            f => 1,
         },
         l => {
             A => 1,
@@ -1152,6 +1161,9 @@ sub mutex_options {
             l => 1,
             o => 1,
             output => 1,
+        },
+        'smart-case' => {
+            f => 1,
         },
         u => {
             f => 1,
