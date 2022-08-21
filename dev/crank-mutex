@@ -1,4 +1,4 @@
-#!/bin/env perl
+#!/usr/bin/env perl
 
 use 5.010;
 use strict;
@@ -16,6 +16,7 @@ sub invalid_combinations {
     my @fg         = qw( -f -g );
 
     return (
+        [qw(--and)]      => [qw( --or )],
         [qw(-l)]         => [@context, @file_lists, @pretty, @filename, @output, qw(--passthru --column --show-types)],
         [qw(-L)]         => [@context, @file_lists, @pretty, @filename, @output, qw(--passthru --column --show-types -c -v)],
         [@output]        => [@context, @file_lists, @output, qw(-c --column --show-types)],

@@ -919,6 +919,9 @@ sub mutex_options {
             v => 1,
             'with-filename' => 1,
         },
+        and => {
+            or => 1,
+        },
         break => {
             L => 1,
             c => 1,
@@ -1083,6 +1086,9 @@ sub mutex_options {
             passthru => 1,
             'show-types' => 1,
             v => 1,
+        },
+        or => {
+            and => 1,
         },
         output => {
             A => 1,
