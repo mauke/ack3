@@ -873,6 +873,8 @@ sub print_matches_in_file {
         my $last_match_lineno;
         my $in_range = range_setup();
 
+        my $has_bool = $opt_and || $opt_or;
+
         while ( <$fh> ) {
             chomp;
 
@@ -880,7 +882,20 @@ sub print_matches_in_file {
 
             if ( $in_range ) {
                 $match_colno = undef;
-                if ( /$search_re/o ) {
+                my $is_match = /$search_re/o;
+                if ( $has_bool ) {
+                    if ( $opt_and ) {
+                        for my $re ( @{$opt_and} ) {
+                            $is_match &&= /$re/;
+                        }
+                    }
+                    elsif ( $opt_or ) {
+                        for my $re ( @{$opt_or} ) {
+                            $is_match ||= /$re/;
+                        }
+                    }
+                }
+                if ( $is_match ) {
                     $match_colno = $-[0] + 1;
                     if ( !$has_printed_from_this_file ) {
                         $stats{filematches}++;
