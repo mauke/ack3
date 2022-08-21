@@ -264,8 +264,12 @@ sub get_arg_spec {
         return;
     }
 
+    $opt->{and} = [];
+    $opt->{or} = [];
+
     return {
         1                   => sub { $opt->{1} = $opt->{m} = 1 },
+        'and=s'             => $opt->{and},
         'A|after-context:-1'  => sub { shift; $opt->{A} = _context_value(shift) },
         'B|before-context:-1' => sub { shift; $opt->{B} = _context_value(shift) },
         'C|context:-1'        => sub { shift; $opt->{B} = $opt->{A} = _context_value(shift) },
@@ -319,6 +323,7 @@ sub get_arg_spec {
         'match=s'           => \$opt->{regex},
         'n|no-recurse'      => \$opt->{n},
         o                   => sub { $opt->{output} = '$&' },
+        'or=s'              => $opt->{or},
         'output=s'          => \$opt->{output},
         'pager:s'           => sub {
             my ( undef, $value ) = @_;

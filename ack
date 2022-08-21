@@ -28,6 +28,7 @@ use App::Ack::Filter::Collection ();
 
 # Global command-line options
 our $opt_1;
+our $opt_and;
 our $opt_A;
 our $opt_B;
 our $opt_break;
@@ -41,6 +42,7 @@ our $opt_heading;
 our $opt_L;
 our $opt_l;
 our $opt_m;
+our $opt_or;
 our $opt_output;
 our $opt_passthru;
 our $opt_p;
@@ -213,6 +215,8 @@ MAIN: {
         ($search_re, $scan_re) = build_regex( $opt_regex, $opt );
         $stats{search_re} = $search_re;
         $stats{scan_re} = $scan_re;
+
+        _build_and_or( \$opt_and, \$opt_or, $opt );
     }
     else {
         if ( $opt_f ) {
@@ -223,6 +227,7 @@ MAIN: {
             ($search_re, $scan_re) = build_regex( $opt_regex, $opt );
             $stats{search_re} = $search_re;
             $stats{scan_re} = $scan_re;
+            _build_and_or( \$opt_and, \$opt_or, $opt );
         }
         # XXX What is this checking for?
         if ( $search_re && $search_re =~ /\n/ ) {
@@ -287,7 +292,27 @@ MAIN: {
     App::Ack::exit_from_ack( $nmatches );
 }
 
+
 # End of MAIN
+
+
+sub _build_and_or {
+    my $opt_and = shift;
+    my $opt_or = shift;
+    my $opt = shift;
+
+    for my $and_regex ( @{$opt->{and}} ) {
+        my ($built, undef) = build_regex( $and_regex, $opt );
+        push( @{$$opt_and}, $built );
+    }
+    for my $or_regex ( @{$opt->{or}} ) {
+        my ($built, undef) = build_regex( $or_regex, $opt );
+        push( @{$$opt_or}, $built );
+    }
+    return;
+
+}
+
 
 sub file_loop_fg {
     my $files = shift;
