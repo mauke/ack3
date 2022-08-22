@@ -59,6 +59,9 @@ our $is_tracking_context;
 # The regex that we search for in each file.
 our $search_re;
 
+# The regex that matches for things we want to exclude via the --not option.
+our $search_not_re;
+
 # Special /m version of our $search_re.
 our $scan_re;
 
@@ -211,8 +214,10 @@ MAIN: {
         $files     = App::Ack::Files->from_stdin();
         $opt_regex //= shift @ARGV;
         ($search_re, $scan_re) = build_regex( $opt_regex, $opt );
+        $search_not_re = _build_search_not_re( $opt );
         $stats{search_re} = $search_re;
         $stats{scan_re} = $scan_re;
+        $stats{search_not_re} = $search_not_re;
     }
     else {
         if ( $opt_f ) {
@@ -221,8 +226,10 @@ MAIN: {
         else {
             $opt_regex //= shift @ARGV;
             ($search_re, $scan_re) = build_regex( $opt_regex, $opt );
+            $search_not_re = _build_search_not_re( $opt );
             $stats{search_re} = $search_re;
             $stats{scan_re} = $scan_re;
+            $stats{search_not_re} = $search_not_re;
         }
         # XXX What is this checking for?
         if ( $search_re && $search_re =~ /\n/ ) {
@@ -274,7 +281,7 @@ MAIN: {
 
     if ( $opt_debug ) {
         require List::Util;
-        my @stats = qw( search_re scan_re prescans linescans filematches linematches );
+        my @stats = qw( search_re scan_re search_not_re prescans linescans filematches linematches );
         my $width = List::Util::max( map { length } @stats );
 
         for my $stat ( @stats ) {
@@ -855,7 +862,12 @@ sub print_matches_in_file {
 
             if ( $in_range ) {
                 $match_colno = undef;
-                if ( /$search_re/o ) {
+                my $is_match = /$search_re/o;
+                if ( $is_match && $search_not_re ) {
+                    local @-;
+                    $is_match = !/$search_not_re/o;
+                }
+                if ( $is_match ) {
                     $match_colno = $-[0] + 1;
                     if ( !$has_printed_from_this_file ) {
                         $stats{filematches}++;
@@ -1114,6 +1126,24 @@ sub count_matches_in_file {
 
 sub range_setup {
     return !$using_ranges || (!$opt_range_start && $opt_range_end);
+}
+
+
+sub _build_search_not_re {
+    my $opt = shift;
+
+    my @not = @{$opt->{not}};
+
+    if ( @not ) {
+        my @built;
+        for my $re ( @not ) {
+            my ($built,undef) = build_regex( $re, $opt );
+            push( @built, $built );
+        }
+        return join( '|', @built );
+    }
+
+    return;
 }
 
 
