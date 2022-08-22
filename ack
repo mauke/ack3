@@ -728,13 +728,17 @@ sub print_matches_in_file {
 
             my $does_match;
             if ( $in_range ) {
+                $does_match = /$search_re/o;
+                if ( $does_match && $search_not_re ) {
+                    local @-;
+                    $does_match = !/$search_not_re/o;
+                }
                 if ( $opt_v ) {
-                    $does_match = !/$search_re/o;
+                    $does_match = !$does_match;
                 }
                 else {
-                    if ( $does_match = /$search_re/o ) {
+                    if ( $does_match ) {
                         # @- = @LAST_MATCH_START
-                        # @+ = @LAST_MATCH_END
                         $match_colno = $-[0] + 1;
                     }
                 }
@@ -786,7 +790,12 @@ sub print_matches_in_file {
             $in_range = 1 if ( $using_ranges && !$in_range && $opt_range_start && /$opt_range_start/o );
 
             $match_colno = undef;
-            if ( $in_range && ($opt_v xor /$search_re/o) ) {
+            my $does_match = /$search_re/o;
+            if ( $does_match && $search_not_re ) {
+                local @-;
+                $does_match = !/$search_not_re/o;
+            }
+            if ( $in_range && ($opt_v xor $does_match) ) {
                 if ( !$opt_v ) {
                     $match_colno = $-[0] + 1;
                 }
@@ -828,7 +837,12 @@ sub print_matches_in_file {
             $in_range = 1 if ( $using_ranges && !$in_range && $opt_range_start && /$opt_range_start/o );
 
             if ( $in_range ) {
-                if ( !/$search_re/o ) {
+                my $does_match = /$search_re/o;
+                if ( $does_match && $search_not_re ) {
+                    # local @-; No need to localize this because we don't use @-.
+                    $does_match = !/$search_not_re/o;
+                }
+                if ( !$does_match ) {
                     if ( !$has_printed_from_this_file ) {
                         if ( $opt_break && $has_printed_from_any_file ) {
                             App::Ack::print_blank_line();
@@ -1100,7 +1114,11 @@ sub count_matches_in_file {
                 chomp;
                 $in_range = 1 if ( !$in_range && $opt_range_start && /$opt_range_start/o );
                 if ( $in_range ) {
-                    if ( /$search_re/o xor $opt_v ) {
+                    my $is_match = /$search_re/o;
+                    if ( $is_match && $search_not_re ) {
+                        $is_match = !/$search_not_re/o;
+                    }
+                    if ( $is_match xor $opt_v ) {
                         ++$nmatches;
                         last if $bail;
                     }
@@ -1111,7 +1129,11 @@ sub count_matches_in_file {
         else {
             while ( <$fh> ) {
                 chomp;
-                if ( /$search_re/o xor $opt_v ) {
+                my $is_match = /$search_re/o;
+                if ( $is_match && $search_not_re ) {
+                    $is_match = !/$search_not_re/o;
+                }
+                if ( $is_match xor $opt_v ) {
                     ++$nmatches;
                     last if $bail;
                 }
