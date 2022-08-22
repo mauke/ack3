@@ -1593,6 +1593,14 @@ Print this manual page.
 
 No descending into subdirectories.
 
+=item B<--not=PATTERN>
+
+Specifies a I<PATTERN> that must NOT me true on a given line for a match to occur. This option can be repeated.
+
+If you want to find all the lines with "dogs" but not if "cats" or "fish" appear on the line, use:
+
+    ack dogs --not cats --not fish
+
 =item B<-o>
 
 Show only the part of each line matching PATTERN (turns off text
